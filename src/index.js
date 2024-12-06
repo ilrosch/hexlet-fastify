@@ -12,12 +12,16 @@ app.get('/hello', (req, res) => {
   res.send(`Hello, ${firstName}!`);
 });
 
+app.get('/courses/:id', (req, res) => {
+  res.send(`Course ID: ${req.params.id}`);
+});
+
 app.get('/users', (req, res) => {
   res.send('GET /users');
 });
 
-app.post('/users', (req, res) => {
-  res.send('POST /users');
+app.get('/users/:id/post/:postId', (req, res) => {
+  res.send(`USER ID: ${req.params.id}, POST ID: ${req.params.postId}`);
 });
 
 app.listen({ port }, () => {

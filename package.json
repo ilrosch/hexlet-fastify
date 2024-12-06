@@ -8,6 +8,9 @@
     "test": "test"
   },
   "dependencies": {
+    "@fastify/autoload": "^6.0.0",
+    "@fastify/sensible": "^6.0.0",
+    "@fastify/view": "^10.0.1",
     "abort-controller": "^3.0.0",
     "abstract-logging": "^2.0.1",
     "ajv": "^8.17.1",
@@ -80,6 +83,7 @@
     "process": "^0.11.10",
     "process-warning": "^4.0.0",
     "proxy-addr": "^2.0.7",
+    "pug": "^3.0.3",
     "pump": "^3.0.2",
     "quick-format-unescaped": "^4.0.4",
     "readable-stream": "^3.6.2",
@@ -107,9 +111,7 @@
     "util-deprecate": "^1.0.2",
     "walker": "^1.0.8",
     "wrappy": "^1.0.2",
-    "yargs-parser": "^21.1.1",
-    "@fastify/autoload": "^6.0.0",
-    "@fastify/sensible": "^6.0.0"
+    "yargs-parser": "^21.1.1"
   },
   "devDependencies": {
     "c8": "^10.1.2"

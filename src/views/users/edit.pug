@@ -1,0 +1,20 @@
+extends ../layouts/index.pug
+
+block content 
+  h1.mb-4 Редактирование пользователя
+
+  if (error)
+    p.text-danger #{error.message}
+  
+  .card.p-3(style="max-width: 500px;")
+    form(action=route("editUser", { id: user.id }), method = "post")
+      .mb-3
+        label.form-label(for = "firstName") Имя
+        input.form-control(type="text", id="firstName", name="firstName", value = user.firstName)
+      .mb-3
+        label.form-label(for = "lastName") Фамилия
+        input.form-control(type="text", id="lastName", name="lastName", value = user.lastName)
+      .mb-3
+        label.form-label(for = "email") Почта
+        input.form-control(type="email", id="email", name="email", value = user.email)
+      input.btn.btn-primary(type="submit", value="Сохранить")

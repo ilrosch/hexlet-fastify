@@ -1,16 +1,36 @@
-html(lang="en")
-  head
-    meta(charset="UTF-8")
-    meta(name="viewport", content="width=device-width, initial-scale=1.0")
-    title Хекслет
-  body 
-    h1= header 
-    if courses.length === 0
-      p Пока не добавлено ни одного курса
-    else 
+extends ../layouts/index.pug
+
+block content 
+  .d-flex.justify-content-between.align-items-center.mb-4
+    h1 Список курсов
+    a.btn.btn-primary(href=route('addCourse')) Создать курс
+
+  .card.shadow-sm.mb-5
+    .card-body.p-3
+      form(action=route('courses'), method='get')
+        .row.align-items-end
+          .col
+            label.form-label(for= 'filterTitle') Название курса
+            input.form-control(id= 'filterTitle' name= 'title')
+          .col 
+            label.form-label(for= 'filterDesc') Описание курса
+            input.form-control(id= 'filterDesc' name= 'desc')
+          .col-auto
+            input(class='btn btn-primary' type='submit' value= 'Поиск')
+
+  table.table.table-striped.table-hover
+    thead
+      tr
+        th.py-3(scope = "col") Идентификатор курса
+        th.py-3(scope = "col") Название курса
+        th.py-3(scope = "col") Управление курсом
+    tbody
       each course in courses 
-        div 
-          h2 
-            a(href=`/courses/${course.id}`)= course.title 
-          p= course.description 
-  
+        tr 
+          td(scope = "row") #{course.id}
+          td 
+            a(href=route('course', { id: course.id })) #{course.title}
+          td.d-flex.gap-2
+            a.btn.btn-primary.btn-sm(href=route('editCourse', { id: course.id })) Редактировать
+            form(action=route('rmCourse', { id: course.id }), method = "post")
+              input.btn.btn-danger.btn-sm(type = "submit", value = "Удалить")

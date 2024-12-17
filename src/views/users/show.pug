@@ -1,0 +1,21 @@
+extends ../layouts/index.pug
+
+block content 
+  h1.mb-4 Профиль пользователя
+  
+  .card.p-3(style="max-width: 500px;")
+    table.table.table-striped.table-hover
+      tr 
+        th(scope = "row") Имя
+        td #{user.firstName}
+      tr 
+        th(scope = "row") Фамилия
+        td #{user.lastName}
+      tr 
+        th(scope = "row") Почта
+        td #{user.email}
+    
+    .d-flex.gap-2
+      a.btn.btn-primary.btn-sm(href=route('editUser', { id: user.id })) Редактировать
+      form(action=route('rmUser', { id: user.id }), method = "post")
+        input.btn.btn-danger.btn-sm(type = "submit", value = "Удалить")

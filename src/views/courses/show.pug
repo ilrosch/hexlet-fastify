@@ -1,9 +1,11 @@
-doctype html
-html
-  head
-    title Hello Hexlet!
-  body
-    main
-      h1= course.title
-      p= course.description
-      
+extends ../layouts/index.pug
+
+block content 
+  .d-flex.flex-column.flex-grow-1
+    h1.mb-4 #{course.title}
+    p.text-secondary #{course.description}
+
+  .d-flex.gap-2
+    a.btn.btn-primary.btn-sm(href=route('editCourse', { id: course.id })) Редактировать
+    form(action=route('rmCourse', { id: course.id }), method = "post")
+      input.btn.btn-danger.btn-sm(type = "submit", value = "Удалить")

@@ -1,0 +1,17 @@
+extends ../layouts/index.pug
+
+block content 
+  h1.mb-4 Редактирование курса
+  
+  if (error)
+    p.text-danger #{error.message}
+
+  .card.p-3(style="max-width: 500px;")
+    form(action=route('editCourse', { id: course.id }), method = "post")
+      .mb-3
+        label.form-label(for = "title") Название курса
+        input.form-control(type="text", id="title", name="title", value = course.title)
+      .mb-3
+        label.form-label(for = "description") Описание курса
+        textarea.form-control(type="text", id="description", name="description", rows = "3") #{course.description}
+      input.btn.btn-primary(type="submit", value="Сохранить")

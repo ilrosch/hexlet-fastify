@@ -1,0 +1,25 @@
+extends ../layouts/index.pug
+
+block content 
+  .d-flex.justify-content-between.align-items-center.mb-4
+    h1 Список пользователей
+    a.btn.btn-primary(href=route("addUser")) Создать пользователя
+
+  table.table.table-striped.table-hover
+    thead
+      tr
+        th.py-3(scope = "col") Идентификатор
+        th.py-3(scope = "col") Имя/Фамилия пользователя
+        th.py-3(scope = "col") Почта пользователя
+        th.py-3(scope = "col") Управление пользователем
+    tbody
+      each user in users 
+        tr 
+          td(scope = "row") #{user.id}
+          td 
+            a(href=route('user', { id: user.id })) #{user.firstName} #{user.lastName}
+          td #{user.email}
+          td.d-flex.gap-2
+            a.btn.btn-primary.btn-sm(href=route('editUser', { id: user.id })) Редактировать
+            form(action=route('rmUser', { id: user.id }), method = "post")
+              input.btn.btn-danger.btn-sm(type = "submit", value = "Удалить")

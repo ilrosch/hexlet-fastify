@@ -1,4 +1,10 @@
 extends ./layouts/index.pug
 
 block content 
-  h1 Hello! 
+  if (username)
+    h1 Привет, #{username}! 
+    form(action=route('rmSession'), method = 'post')
+      input.btn.btn-danger.btn-sm(type = 'submit', value = 'Выйти')
+  else
+    h1 Привет, гость! 
+      a.btn.btn-primary.btn-sm(href=route('session')) Войти

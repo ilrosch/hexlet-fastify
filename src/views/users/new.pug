@@ -3,18 +3,15 @@ extends ../layouts/index.pug
 block content 
   h1.mb-4 Создать пользователя
 
-  if (error)
-    p.text-danger #{error.message}
-  
   .card.p-3(style="max-width: 500px;")
     form(action=route("users"), method = "post")
       .mb-3
         label.form-label(for = "firstName") Имя
-        input.form-control(type="text", id="firstName", name="firstName", placeholder = "Иван", value = user.firstName)
+        input.form-control(type="text", id="firstName", name="firstName", placeholder = "Иван", value = user ? user.firstName : null)
       .mb-3
         label.form-label(for = "lastName") Фамилия
-        input.form-control(type="text", id="lastName", name="lastName", placeholder = "Иванов", value = user.lastName)
+        input.form-control(type="text", id="lastName", name="lastName", placeholder = "Иванов", value = user ? user.lastName : null)
       .mb-3
         label.form-label(for = "email") Почта
-        input.form-control(type="email", id="email", name="email", placeholder = "mail@mail.ru", value = user.email)
+        input.form-control(type="email", id="email", name="email", placeholder = "mail@mail.ru", value = user ? user.email : null)
       input.btn.btn-primary(type="submit", value="Создать")

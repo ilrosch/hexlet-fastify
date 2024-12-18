@@ -1,22 +1,8 @@
 import sanitize from 'sanitize-html';
 import yup from 'yup';
 
-const state = {
-  courses: [
-    {
-      id: 1,
-      title: 'JS: Массивы',
-      description: 'Курс про массивы в JavaScript',
-    },
-    {
-      id: 2,
-      title: 'JS: Функции',
-      description: 'Курс про функции в JavaScript',
-    },
-  ],
-};
-
-export default (app) => {
+export default (app, db) => {
+  // Валидатор полей
   const validator = {
     attachValidation: true,
     schema: {
@@ -35,64 +21,92 @@ export default (app) => {
     },
   };
 
+  // Страница со списком всех курсов
   app.get('/courses', { name: 'courses' }, (req, res) => {
-    const title = sanitize(req.query.title);
-    const desc = sanitize(req.query.desc);
+    const title = sanitize(req.query.title).toLowerCase();
+    const desc = sanitize(req.query.desc).toLowerCase();
 
-    let courses = state.courses;
-    if (title !== null) {
-      const reg = new RegExp(`.*${title}.*`, 'i');
-      courses = courses.filter(({ title }) => reg.exec(title));
+    const querys = {
+      all: 'SELECT * FROM courses',
+      allFilters: `SELECT * FROM courses WHERE title LIKE "%${title}%" && description LIKE "%${desc}%"`,
+      title: `SELECT * FROM courses WHERE title LIKE "%${title}%"`,
+      desc: `SELECT * FROM courses WHERE description LIKE "%${desc}%"`,
+    };
+
+    let query;
+    if (!title && !desc) {
+      query = querys.all;
+    } else if (title && desc) {
+      query = querys.allFilters;
+    } else if (title) {
+      query = querys.title;
+    } else {
+      query = querys.desc;
     }
 
-    if (desc !== null) {
-      const reg = new RegExp(`.*${desc}.*`, 'i');
-      courses = courses.filter(({ description }) => reg.exec(description));
-    }
-
-    res.view('src/views/courses/index', { courses });
+    db.all(query, (error, courses) => {
+      if (error) {
+        console.error(error);
+        req.flash('error', { type: 'danger', message: 'Ошибка получения списка курсов' });
+        res.redirect(app.reverse('courses'));
+        return;
+      }
+      res.view('courses/index', { courses, flash: res.flash() });
+    });
   });
 
-  app.get('/courses/new', { name: 'addCourse' }, (req, res) => res.view('src/views/courses/new', { course: {} }));
+  // Страница создания нового курса
+  app.get('/courses/new', { name: 'addCourse' }, (req, res) => {
+    res.view('courses/new', { flash: res.flash() });
+  });
 
+  // Страница курса
   app.get('/courses/:id', { name: 'course' }, (req, res) => {
-    const courseId = parseInt(sanitize(req.params.id));
-    const course = state.courses.find(({ id }) => id === courseId);
-
-    if (!course) {
-      res.code(404).send('Course not found');
-      return;
-    }
-
-    res.view('src/views/courses/show', { course })
+    const id = parseInt(sanitize(req.params.id));
+    const query = `SELECT * FROM courses WHERE id = ${id}`;
+    db.get(query, (error, course) => {
+      if (error) {
+        console.error(error);
+        req.flash('error', { type: 'danger', message: 'Курс не найден' });
+        res.redirect(app.reverse('courses'));
+        return;
+      }
+      res.view('courses/show', { course });
+    });
   });
 
+  // Страница редактирования курса
   app.get('/courses/:id/edit', { name: 'editCourse' }, (req, res) => {
-    const courseId = parseInt(sanitize(req.params.id));
-    const course = state.courses.find(({ id }) => id === courseId);
-
-    if (!course) {
-      res.code(404).send('Course not found');
-      return;
-    }
-
-    res.view('src/views/courses/edit', { course })
+    const id = parseInt(sanitize(req.params.id));
+    const query = `SELECT * FROM courses WHERE id = ${id}`;
+    db.get(query, (error, course) => {
+      if (error) {
+        console.error(error);
+        req.flash('error', { type: 'danger', message: 'Курс не найден' });
+        res.redirect(app.reverse('courses'));
+        return;
+      }
+      res.view('courses/edit', { course });
+    });
   });
 
+  // Создание курса
   app.post('/courses', validator, (req, res) => {
     const { title, description } = req.body;
 
     if (req.validationError) {
+      req.flash('error', { type: 'danger', message: req.validationError.message });
+
       const data = {
         course: {
           title,
           description
         },
 
-        error: req.validationError,
+        flash: res.flash(),
       };
 
-      res.view('src/views/courses/new', data);
+      res.view('courses/new', data);
       return;
     }
 
@@ -101,49 +115,72 @@ export default (app) => {
       description,
     };
 
-    state.courses.push(course);
-
-    res.redirect(app.reverse('courses'));
-  });
-
-  app.post('/courses/:id', { name: 'rmCourse' }, (req, res) => {
-    const courseId = parseInt(sanitize(req.params.id));
-    const courseIndex = state.courses.findIndex(({ id }) => id === courseId);
-    if (courseIndex === -1) {
-      res.code(404).send('Course not found');
-    } else {
-      state.courses.splice(courseIndex, 1);
+    const query = `INSERT INTO courses (title, description) VALUES ("${title}", "${description}")`;
+    db.run(query, (error) => {
+      if (error) {
+        console.error(error);
+        req.flash('warning', { type: 'warning', message: 'Ошибка сервера' });
+        res.view('courses/new', { course, flash: res.flash() });
+        return;
+      }
+      req.flash('success', { type: 'success', message: 'Курс успешно создан' });
       res.redirect(app.reverse('courses'));
-    }
+    });
   });
 
+  // Удаление курса
+  app.post('/courses/:id', { name: 'rmCourse' }, (req, res) => {
+    const id = parseInt(sanitize(req.params.id));
+    const query = `DELETE FROM courses WHERE id = ${id}`;
+    db.run(query, (error) => {
+      if (error) {
+        console.error(error);
+        req.flash('warning', { type: 'warning', message: 'Ошибка сервера' });
+        res.redirect(app.reverse('courses'));
+        return;
+      }
+      req.flash('success', { type: 'success', message: 'Курс успешно удален' });
+      res.redirect(app.reverse('courses'));
+    });
+  });
+
+  // Редактирование курса
   app.post('/courses/:id/edit', validator, (req, res) => {
-    const courseId = parseInt(sanitize(req.params.id));
+    const id = parseInt(sanitize(req.params.id));
     const { title, description } = req.body;
 
     if (req.validationError) {
+      req.flash('error', { type: 'danger', message: req.validationError.message });
+
       const data = {
         course: {
           title,
           description,
-          id: courseId
+          id,
         },
 
-        error: req.validationError,
+        flash: res.flash(),
       };
 
-      res.view('src/views/courses/edit', data);
+      res.view('courses/edit', data);
       return;
     }
 
-    const courseIndex = state.courses.findIndex(({ id }) => id === courseId);
     const course = {
       title,
       description,
     };
 
-    state.courses[courseIndex] = { ...state.courses[courseIndex], ...course };
-
-    res.redirect(app.reverse('courses'));
+    const query = `UPDATE courses SET title = "${title}", description = "${description}" WHERE id = ${id}`;
+    db.run(query, (error) => {
+      if (error) {
+        console.error(error);
+        req.flash('warning', { type: 'warning', message: 'Ошибка сервера' });
+        res.view('courses/edit', { course, flash: res.flash() });
+        return;
+      }
+      req.flash('success', { type: 'success', message: 'Курс успешно обновлен' });
+      res.redirect(app.reverse('courses'));
+    });
   });
 };

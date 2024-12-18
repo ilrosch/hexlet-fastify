@@ -1,18 +1,8 @@
 import sanitize from 'sanitize-html';
 import yup from 'yup';
 
-const state = {
-  users: [
-    {
-      id: 1,
-      firstName: 'Иван',
-      lastName: 'Иванов',
-      email: 'ivanov@mail.ru'
-    },
-  ],
-};
-
-export default (app) => {
+export default (app, db) => {
+  // Валидтор полей
   const validator = {
     attachValidation: true,
     schema: {
@@ -32,53 +22,72 @@ export default (app) => {
     },
   };
 
+  // Страница со списком пользователей
   app.get('/users', { name: 'users' }, (req, res) => {
-    res.view('src/views/users/index', { users: state.users })
+    const query = 'SELECT * FROM users';
+    db.all(query, (error, users) => {
+      if (error) {
+        console.error(error);
+        req.flash('error', { type: 'danger', message: 'Ошибка получения списка пользователей' });
+        res.redirect(app.reverse('users'));
+        return;
+      }
+      res.view('users/index', { users, flash: res.flash() });
+    });
   });
 
+  // Страница создания нового пользовтеля
   app.get('/users/new', { name: 'addUser' }, (req, res) => {
-    res.view('src/views/users/new', { user: {} })
+    res.view('users/new', { flash: res.flash() });
   });
 
+  // Страница пользователя
   app.get('/users/:id', { name: 'user' }, (req, res) => {
-    const userId = parseInt(sanitize(req.params.id));
-    const user = state.users.find(({ id }) => id === userId);
-
-    if (!user) {
-      res.code(404).send('User not found');
-      return;
-    }
-
-    res.view('src/views/users/show', { user })
+    const id = parseInt(sanitize(req.params.id));
+    const query = `SELECT * FROM users WHERE id = ${id}`;
+    db.get(query, (error, user) => {
+      if (error) {
+        console.error(error);
+        req.flash('error', { type: 'danger', message: 'Пользователь не найден' });
+        res.redirect(app.reverse('users'));
+        return;
+      }
+      res.view('users/show', { user });
+    });
   });
 
+  // Страница редактирования пользователя
   app.get('/users/:id/edit', { name: 'editUser' }, (req, res) => {
-    const userId = parseInt(sanitize(req.params.id));
-    const user = state.users.find(({ id }) => id === userId);
-
-    if (!user) {
-      res.code(404).send('Course not found');
-      return;
-    }
-
-    res.view('src/views/users/edit', { user })
+    const id = parseInt(sanitize(req.params.id));
+    const query = `SELECT * FROM users WHERE id = ${id}`;
+    db.get(query, (error, user) => {
+      if (error) {
+        console.error(error);
+        req.flash('error', { type: 'danger', message: 'Пользователь не найден' });
+        res.redirect(app.reverse('users'));
+        return;
+      }
+      res.view('users/edit', { user });
+    });
   });
 
+  // Добавление пользователя
   app.post('/users', validator, (req, res) => {
     const { firstName, lastName, email } = req.body;
 
     if (req.validationError) {
+      req.flash('error', { type: 'danger', message: req.validationError.message });
+
       const data = {
         user: {
           firstName,
           lastName,
           email,
         },
-
-        error: req.validationError,
+        flash: res.flash(),
       };
 
-      res.view('src/views/users/new', data);
+      res.view('users/new', data);
       return;
     }
 
@@ -88,24 +97,38 @@ export default (app) => {
       email,
     };
 
-    state.users.push(user);
-
-    res.redirect(app.reverse('users'));
-  });
-
-  app.post('/users/:id', { name: 'rmUser' }, (req, res) => {
-    const userId = parseInt(sanitize(req.params.id));
-    const userIndex = state.users.findIndex(({ id }) => id === userId);
-    if (userIndex === -1) {
-      res.code(404).send('User not found');
-    } else {
-      state.users.splice(userIndex, 1);
+    const query = `INSERT INTO users (firstName, lastName, email) VALUES ("${firstName}", "${lastName}", "${email}")`;
+    db.run(query, (error) => {
+      if (error) {
+        console.error(error);
+        req.flash('warning', { type: 'warning', message: 'Ошибка сервера' });
+        res.view('users/new', { user, flash: res.flash() });
+        return;
+      }
+      req.flash('success', { type: 'success', message: 'Пользователь успешно создан' });
       res.redirect(app.reverse('users'));
-    }
+    });
   });
 
+  // Удаление пользователя
+  app.post('/users/:id', { name: 'rmUser' }, (req, res) => {
+    const id = parseInt(sanitize(req.params.id));
+    const query = `DELETE FROM users WHERE id = ${id}`;
+    db.run(query, (error) => {
+      if (error) {
+        console.error(error);
+        req.flash('warning', { type: 'warning', message: 'Ошибка сервера' });
+        res.redirect(app.reverse('users'));
+        return;
+      }
+      req.flash('success', { type: 'success', message: 'Пользователь успешно удален' });
+      res.redirect(app.reverse('users'));
+    });
+  });
+
+  // Редактирование пользователя
   app.post('/users/:id/edit', validator, (req, res) => {
-    const userId = parseInt(sanitize(req.params.id));
+    const id = parseInt(sanitize(req.params.id));
     const { firstName, lastName, email } = req.body;
 
     if (req.validationError) {
@@ -120,19 +143,26 @@ export default (app) => {
         error: req.validationError,
       };
 
-      res.view('src/views/users/edit', data);
+      res.view('users/edit', data);
       return;
     }
 
-    const userIndex = state.users.findIndex(({ id }) => id === userId);
     const user = {
       firstName,
       lastName,
       email,
     };
 
-    state.users[userIndex] = { ...state.users[userIndex], ...user };
-
-    res.redirect(app.reverse('users'));
+    const query = `UPDATE users SET firstName = "${firstName}", lastName = "${lastName}", email = "${email}" WHERE id = ${id}`;
+    db.run(query, (error) => {
+      if (error) {
+        console.error(error);
+        req.flash('warning', { type: 'warning', message: 'Ошибка сервера' });
+        res.view('users/edit', { user, flash: res.flash() });
+        return;
+      }
+      req.flash('success', { type: 'success', message: 'Пользователь успешно обновлен' });
+      res.redirect(app.reverse('users'));
+    });
   });
 };

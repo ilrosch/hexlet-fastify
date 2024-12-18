@@ -1,24 +1,29 @@
-# Getting Started with [Fastify-CLI](https://www.npmjs.com/package/fastify-cli)
+# Hexlet Fastify Site
 
-This project was bootstrapped with Fastify-CLI.
+A learning project to consolidate the material on the Fastify course topic
 
-## Available Scripts
+## Get start
 
-In the project directory, you can run:
+Clone the repository to yourself locally:
 
-### `npm run dev`
+```console
+  git clone git@github.com:ilrosch/hexlet-fastify.git
+  # or
+  # git clone https://github.com/ilrosch/hexlet-fastify.git
+```
 
-To start the app in dev mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Install the necessary packages:
 
-### `npm start`
+```console
+  make install
+  # or
+  # npm ci
+```
 
-For production mode
+Run localhost:
 
-### `npm run test`
-
-Run the test cases.
-
-## Learn More
-
-To learn Fastify, check out the [Fastify documentation](https://fastify.dev/docs/latest/).
+```console
+  make start
+  # or
+  # node bin/index.js
+```

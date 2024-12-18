@@ -3,15 +3,12 @@ extends ../layouts/index.pug
 block content 
   h1.mb-4 Создать курс
 
-  if (error)
-    p.text-danger #{error.message}
-  
   .card.p-3(style="max-width: 500px;")
     form(action=route('courses'), method = "post")
       .mb-3
         label.form-label(for = "title") Название курса
-        input.form-control(type="text", id="title", name="title", placeholder = "JS: Объекты", value = course.title)
+        input.form-control(type="text", id="title", name="title", placeholder = "JS: Объекты", value = course ? course.title : null)
       .mb-3
         label.form-label(for = "description") Описание курса
-        textarea.form-control(type="text", id="description", name="description", rows = "3") #{course.description}
+        textarea.form-control(type="text", id="description", name="description", rows = "3") #{course ? course.description : null}
       input.btn.btn-primary(type="submit", value="Создать")

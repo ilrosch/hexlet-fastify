@@ -16,9 +16,15 @@ html(lang='ru')
             a.nav-link(href = "/") Главная
             a.nav-link(href=route("courses")) Курсы
             a.nav-link(href=route("users")) Пользователи
-
+    
     main.d-flex.flex-column.flex-grow-1.py-4
       .container.d-flex.flex-column.flex-grow-1
+        if (flash)
+          each messages in flash
+            each message in messages
+              .alert(class=`alert-${message.type}` role="alert")
+                strong #{message.message}
+
         block content
 
     footer.bg-dark.text-light 

@@ -15,7 +15,7 @@ import addRoutes from './routes/index.js';
 
 export default async () => {
   const __dirname = fileURLToPath(path.dirname(import.meta.url));
-  const app = fastify({ exposeHeadRoutes: false, logger: true });
+  const app = fastify({ logger: true });
 
   const db = new sqlite3.Database(':memory:');
   const prepareDatabase = () => {

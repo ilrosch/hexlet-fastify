@@ -127,9 +127,7 @@
     "c8": "^10.1.2"
   },
   "scripts": {
-    "test": "node --test test/**/*.test.js",
-    "start": "fastify start -l info app.js",
-    "dev": "fastify start -w -l info -P app.js"
+    "start": "node bin/index.js"
   },
   "keywords": [],
   "author": "",

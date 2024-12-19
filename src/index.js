@@ -15,7 +15,7 @@ import addRoutes from './routes/index.js';
 
 export default async () => {
   const __dirname = fileURLToPath(path.dirname(import.meta.url));
-  const app = fastify({ logger: true });
+  const app = fastify({ exposeHeadRoutes: false, logger: true });
 
   const db = new sqlite3.Database(':memory:');
   const prepareDatabase = () => {
@@ -75,7 +75,6 @@ export default async () => {
     },
   });
   await app.register(formbody);
-
   await app.register(fastifyCookie);
   await app.register(fastifySession, {
     secret: 'a secret with minimum length of 32 characters',
